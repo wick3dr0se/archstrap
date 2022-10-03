@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#set -euo pipefail
+set -euo pipefail
 shopt -s extglob
 
 LC_ALL='C'
@@ -9,7 +9,7 @@ input=${*//-*}
 
 # define booleans
 #hostPkgs=0
-hostMirrors=0
+hostMirrors=1
 hostKeyring=1
 
 # source assets
