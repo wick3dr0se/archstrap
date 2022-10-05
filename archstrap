@@ -1,11 +1,15 @@
 #!/bin/bash
+# shellcheck disable=SC1090,SC2016
+# SC1090: non-constant source 
+# SC2016: variables purposefully in single quotes
 
 set -euo pipefail
 shopt -s extglob
 
 LC_ALL='C'
 # strip flags from stdin
-input=${*//-*}
+input="${*//-*}"
+inputFlags="${*##[a-z]*}"
 
 # define booleans
 #hostPkgs=0
@@ -15,8 +19,11 @@ hostKeyring=1
 # source assets
 [[ $0 == "${BASH_SOURCE[*]}" ]] || src="${BASH_SOURCE[*]%/*}"
 for i in helpers usage ; do
-  . ${src:-./}$i.sh
+  . "${src:-./}$i".sh
 done
+
+# if flags in stdin, get options
+[[ $inputFlags ]] && get_flags "$*"
 
 get_package_list() { # creates a list of packages to be installed to $nroot
   # configure API
@@ -50,7 +57,7 @@ make_nroot() { # get new root by input, fallback on nroot
 
 main() {
   get_package_list core "$input"
-  make_nroot
+  make_nroot 'nroot'
 
   # propegate packages file & store $pacman
   [[ -f packages ]] && del packages
@@ -59,9 +66,9 @@ main() {
     [[ $i =~ pacman-[0-9] ]] && pacman="$i-$arch.pkg.tar.zst"
     echo "${i%%-[0-9]*}" >> packages
   done
-
   del "$repo"
 
+  # install pacman to new root
   curl -sO "$mirror/$pacman"
   untar "$nroot/$pacman"
   del -d "$nroot" .BUILDINFO .PKGINFO .MTREE
@@ -71,6 +78,8 @@ main() {
       pacman -Qe
     }
   }'
+
+  # 
 
   # copy network config
   [[ -f /etc/resolv ]] && cp /etc/resolv "$nroot"/etc/
