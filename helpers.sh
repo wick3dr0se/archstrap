@@ -22,36 +22,31 @@ _out() {
 get_reply() {
   printf '[\e[32my\e[0mes/\e[31mN\e[0mo]: '
   
-  local reply
+  read -r
+  REPLY="${REPLY:-N}"
 
-  read -r reply
-  reply="${reply:-N}"
-
-  [[ ${reply,,} == y || ${reply,,} == yes ]] &&
-    return 0 ||
-    return 1
+  [[ ${REPLY,,} =~ y(es)? ]] && :
 }
 
 mkmod() {
-  local one="$1" ; shift
+  shift
 
-  mkdir -p "$@" && chmod "$one" "$@"
+  mkdir -p "$*" && chmod "$1" "$*"
 }
 
-
 del() {
-  local dest file filepath
+  local i file filepath
 
   if [[ $1 == -d ]] ; then
-    dest="$2" ; shift 2
-    file="${*}"
+    shift 2
+    file="$*"
 
     for i in $file ; do
-      filepath="$dest/$i"
+      filepath="$2/$i"
       rm -fr "$filepath"
     done
   else
-    rm -fr "$@"
+    rm -fr "$*"
   fi
 }
 

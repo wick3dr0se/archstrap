@@ -1,7 +1,7 @@
 #!/bin/bash
 # shellcheck disable=SC1090,SC2016
-# SC1090: non-constant source 
-# SC2016: variables purposefully in single quotes
+# SC1090: non-constant source in use
+# SC2016: single quotes used to prevent expansion
 
 set -euo pipefail
 shopt -s extglob
@@ -9,12 +9,11 @@ shopt -s extglob
 LC_ALL='C'
 # strip flags from stdin
 input="${*//-*}"
-inputFlags="${*##[a-z]*}"
 
-# define booleans
+# define booleans: arithmetic evaluates 1=on, 0=off
 #hostPkgs=0
-hostMirrors=1
-hostKeyring=1
+hostMirrors=0
+hostKeyring=0
 
 # source assets
 [[ $0 == "${BASH_SOURCE[*]}" ]] || src="${BASH_SOURCE[*]%/*}"
@@ -56,7 +55,7 @@ make_nroot() { # get new root by input, fallback on nroot
 } # end make_nroot
 
 main() {
-  get_package_list core "$input"
+  get_package_list 'core'
   make_nroot 'nroot'
 
   # propegate packages file & store $pacman

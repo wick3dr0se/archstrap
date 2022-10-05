@@ -6,29 +6,33 @@ cat <<-USAGE
  usage | archstrap <newroot> <packages>
 -----------------------------------------
  -c,--hostcache | install host packages to newroot
- -k, --no-keyring | don't copy host pacman keyring to newroot
- -m, --no-mirrors | don't copy host mirrorlist to newroot
+ -k, --keyring | copy host pacman keyring to newroot
+ -m, --mirrors | copy host mirrorlist to newroot
 USAGE
 exit
 }
 
-get_flags() { # bcuz fuck getopts
-for i in $inputFlags ; do
-  [[ $i =~ ^-[a-z] ]] && {
-    while read -rn1 flag ; do
-      flags+=" -${flag#-}"
-    done <<< $i
-  }
-  flags=${flags:-$i}
+inputFlags="${*##[a-z]*}"
 
-  for i in ${flags//-} ; do
+get_flags() { # bcuz fuck getopts
+  for flag in $inputFlags ; do
+    if [[ $flag =~ ^-[a-z] ]] ; then
+      while read -rn1 flag ; do
+        flags+="$flag "
+      done <<< "${flag##-}"
+    else
+      flags+="${flag##--} "
+    fi
+  done
+
+  for i in $flags ; do
     case $i in
-      h|u|help|usage) _usage ;; # get usage
-      #c|hostcache) hostCache=1 ;; # add host packages
-      k|no-keyring) hostKeyring=0 ;; # don't copy host pacman keyring
-      m|no-mirrors) hostMirrors=0 ;; # don't copy host mirrorlist
+      h|u|help|usage) _usage ;;
+      debug) set -x ;;
+      #c|hostcache) hostCache=1 ;;
+      k|no-keyring) hostKeyring=1 ;;
+      m|no-mirrors) hostMirrors=1 ;;
       *) _out 'Bad argument' x ;;
     esac
   done
-done
 }
