@@ -22,7 +22,7 @@ for i in helpers usage ; do
 done
 
 # if flags in stdin, get options
-[[ $inputFlags ]] && get_flags "$*"
+[[ $inputFlags ]] && get_args "$*"
 
 get_package_list() { # creates a list of packages to be installed to $nroot
   # configure API
