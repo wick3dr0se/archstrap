@@ -1,6 +1,6 @@
 #!/bin/bash
 # shellcheck disable=SC1090,SC2016
-# SC1090: non-constant source in use
+# SC1090: non-constant source in use 
 # SC2016: single quotes used to prevent expansion
 
 set -euo pipefail
@@ -10,10 +10,10 @@ LC_ALL='C'
 # strip flags from stdin
 input="${*//-*}"
 
-# define booleans: arithmetic evaluates 1=on, 0=off
-#hostPkgs=0
-hostMirrors=0
+# define booleans: 0=eff, 1=on
+#hostCache=0
 hostKeyring=0
+hostMirrors=0
 
 # source assets
 [[ $0 == "${BASH_SOURCE[*]}" ]] || src="${BASH_SOURCE[*]%/*}"
@@ -30,6 +30,7 @@ get_package_list() { # creates a list of packages to be installed to $nroot
   repo=${1:-core}
   mirror="https://geo.mirror.pkgbuild.com/$repo/os/$arch"
 
+  _out "Building $repo package list.."
   # get $repo package database
   curl -sO "$mirror/$repo".db.tar.gz
 
@@ -42,11 +43,13 @@ make_nroot() { # get new root by input, fallback on nroot
   nroot="${1:-nroot}"
 
   # check if $nroot already exist 
-  [[ -d $nroot ]] && {
-    _out "$nroot already exist. Do you want to overwrite?" e
-    get_reply || _out 'Aborting..' x
+  [[ -e $nroot ]] && {
+    _out "Target '$nroot' already exist. Do you want to overwrite?" 3
+    get_reply || _out 'Script aborted' 1
     del "$nroot"
   }
+
+  _out "Making $nroot filesystem.."
 
 # make the root filesystem, with proper permissions
   mkmod 777 "$nroot"/tmp
@@ -55,7 +58,7 @@ make_nroot() { # get new root by input, fallback on nroot
 } # end make_nroot
 
 main() {
-  get_package_list 'core'
+  get_package_list core "$input"
   make_nroot 'nroot'
 
   # propegate packages file & store $pacman
@@ -71,14 +74,6 @@ main() {
   curl -sO "$mirror/$pacman"
   untar "$nroot/$pacman"
   del -d "$nroot" .BUILDINFO .PKGINFO .MTREE
-
-: '(( hostPkg )) && {
-    [[ -d /var/lib/pacman ]] && {
-      pacman -Qe
-    }
-  }'
-
-  # 
 
   # copy network config
   [[ -f /etc/resolv ]] && cp /etc/resolv "$nroot"/etc/

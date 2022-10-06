@@ -2,26 +2,24 @@
 # helpers.sh
 
 _out() {
-  local code msg
-
-  if [[ $2 == e ]] ; then
-    code=3
-    msg='Error'
-  elif [[ $2 == x ]] ; then
-    code=1
-    msg='Fatal'
+  local char code
+  code="${2:-2}"
+  if (( code == 1 )) ; then
+    char='X'
+  elif (( code == 3 )) ; then
+    char='–'
   fi
 
-  printf '[\e[1;3%sm%s\e[0m]: %s\n' \
-    "${code:-2}" "${msg:-Pass}" "$1"
+  printf '[\e[3%sm%s\e[0m]: %s\n' \
+    "$code" "${char:-✔}" "$1"
 
-  [[ $msg == Fatal ]] && exit 1
-  code='' ; msg=''
+  (( code == 1 )) && exit 1
+  code=''
 }
 
 get_reply() {
   printf '[\e[32my\e[0mes/\e[31mN\e[0mo]: '
-  
+
   read -r
   REPLY="${REPLY:-N}"
 
@@ -29,24 +27,26 @@ get_reply() {
 }
 
 mkmod() {
-  shift
+  local one
+  one="$1" ; shift
 
-  mkdir -p "$*" && chmod "$1" "$*"
+  mkdir -p "$@" && chmod "$one" "$@"
 }
 
+
 del() {
-  local i file filepath
+  local dest file files filepath
 
   if [[ $1 == -d ]] ; then
-    shift 2
-    file="$*"
+    dest="$2" ; shift 2
+    files="${*}"
 
-    for i in $file ; do
-      filepath="$2/$i"
+    for file in $files ; do
+      filepath="$dest/$file"
       rm -fr "$filepath"
     done
   else
-    rm -fr "$*"
+    rm -fr "$@"
   fi
 }
 
