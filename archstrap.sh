@@ -2,22 +2,26 @@
 
 set -eEuo pipefail
 
+rootfs='root.x86_64'
 archTar='archlinux-bootstrap-x86_64.tar.gz'
-officialURL='archlinux.org'
-globalMirror='geo.mirror.pkgbuild.com'
+officialURL='https://archlinux.org'
+globalMirror='https://geo.mirror.pkgbuild.com'
+chrootDest='https://raw.githubusercontent.com/wick3dr0se/archstrap/alpha/archstrap-chroot.sh'
 
-printf '\e7Downloading bootstrap tar and signature..'
-{
-  curl -s https://"$officialURL"/iso/latest/"$archTar".sig -o /tmp/"$archTar".sig
-  curl -s https://"$globalMirror"/iso/latest/"$archTar" -o /tmp/"$archTar"
-}&& printf '\e[2K\e8'
+printf 'Downloading bootstrap signature & tarball..\n'
+curl "$officialURL"/iso/latest/"$archTar".sig -o /tmp/"$archTar".sig
+curl "$globalMirror"/iso/latest/"$archTar" -o /tmp/"$archTar"
 
-gpg --verify /tmp/"$archTar".sig /tmp/"$archTar"||{ 
+printf 'Verifying tarball GPG signature..\n'
+if gpg --verify /tmp/"$archTar".sig /tmp/"$archTar"; then
+  printf 'Signature verified!\n'
+else
   printf 'Bad signature. Script aborted.\n'
   exit 1
-}
+fi
 
-tar xzf /tmp/"$archTar" -C /tmp --numeric-owner&& rm -fr /tmp/"$archTar" /tmp/"$archTar".sig
-echo 'Server = https://geo.mirror.pkgbuild.com/$repo/os/$arch' >> /tmp/root.x86_64/etc/pacman.d/mirrorlist
+tar xzf /tmp/"$archTar" -C /tmp --numeric-owner&& rm -fr /tmp/"$archTar"*
+mkdir /tmp/"$archTar"/run/shm/
+printf 'Server = %s/$repo/os/$arch\n' "$chrootDest" >> /tmp/"$rootfs"/etc/pacman.d/mirrorlist
 
-/tmp/root.x86_64/bin/arch-chroot /tmp/root.x86_64 bash <(curl -s https://raw.githubusercontent.com/wick3dr0se/snake/main/snake.sh)
+/tmp/"$rootfs"/bin/arch-chroot /tmp/"$rootfs" bash <(curl -s "$chrootDest")
