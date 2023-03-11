@@ -1,0 +1,92 @@
+#!/bin/bash
+# shellcheck disable=SC1090,SC2016
+# SC1090: non-constant source in use 
+# SC2016: single quotes used to prevent expansion
+
+set -euo pipefail
+shopt -s extglob
+
+LC_ALL='C'
+# strip flags from stdin
+input="${*//-*}"
+
+# define booleans: 0=eff, 1=on
+#hostCache=0
+hostKeyring=0
+hostMirrors=0
+
+# source assets
+[[ $0 == "${BASH_SOURCE[*]}" ]] || src="${BASH_SOURCE[*]%/*}"
+for i in helpers usage ; do
+  . "${src:-./}$i".sh
+done
+
+# if flags in stdin, get options
+[[ $inputFlags ]] && get_args "$*"
+
+get_package_list() { # creates a list of packages to be installed to $nroot
+  # configure API
+  arch='x86_64'
+  repo=${1:-core}
+  mirror="https://geo.mirror.pkgbuild.com/$repo/os/$arch"
+
+  _out "Building $repo package list.."
+  # get $repo package database
+  curl -sO "$mirror/$repo".db.tar.gz
+
+  # extract to $repo
+  [[ -d $repo ]] || mkdir "$repo"
+  untar "$repo/$repo".db.tar.gz
+} # end get_package_list
+
+make_nroot() { # get new root by input, fallback on nroot
+  nroot="${1:-nroot}"
+
+  # check if $nroot already exist 
+  [[ -e $nroot ]] && {
+    _out "Target '$nroot' already exist. Do you want to overwrite?" 3
+    get_reply || _out 'Script aborted' 1
+    del "$nroot"
+  }
+
+  _out "Making $nroot filesystem.."
+
+# make the root filesystem, with proper permissions
+  mkmod 777 "$nroot"/tmp
+  mkmod 755 "$nroot"/var/{cache/pacman/pkg,lib/pacman,log} "$nroot"/{dev,run,etc/pacman.d}
+  mkmod 555 "$nroot"/{sys,proc}
+} # end make_nroot
+
+main() {
+  get_package_list core "$input"
+  make_nroot 'nroot'
+
+  # propegate packages file & store $pacman
+  [[ -f packages ]] && del packages
+  for i in "$repo"/* ; do
+    i="${i/$repo\/}"
+    [[ $i =~ pacman-[0-9] ]] && pacman="$i-$arch.pkg.tar.zst"
+    echo "${i%%-[0-9]*}" >> packages
+  done
+  del "$repo"
+
+  # install pacman to new root
+  curl -sO "$mirror/$pacman"
+  untar "$nroot/$pacman"
+  del -d "$nroot" .BUILDINFO .PKGINFO .MTREE
+
+  # copy network config
+  [[ -f /etc/resolv ]] && cp /etc/resolv "$nroot"/etc/
+  
+  # copy keyring
+  (( hostKeyring )) && (( ! EUID )) && [[ -d /etc/pacman.d/gnupg ]] &&
+    cp -a --no-preserve=ownership /etc/pacman.d/gnupg "$nroot"/etc/pacman.d/
+
+  # add global mirror
+  echo 'Server = https://geo.mirror.pkgbuild.com/$repo/os/$arch' >> "$nroot"/etc/pacman.d/mirrorlist
+
+  # copy host mirrors
+  (( hostMirrors )) && [[ -f /etc/pacman.d/mirrorlist ]] &&
+    cp -a /etc/pacman.d/mirrorlist "$nroot"/etc/pacman.d/
+}
+main
