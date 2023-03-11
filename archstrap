@@ -1,0 +1,40 @@
+#!/bin/bash
+# shellcheck disable=SC2016
+# SC2816: Expressions don't expand in single quotes, use double quotes for that | It's intentional
+# archstrap must be executed as root user
+
+set -eEuo pipefail
+
+(( $# ))||{ printf 'archstrap [\e[1;31m❌\e[m]: A path must be specified to bootstrap Arch Linux (btw)\n'; exit 1; }
+
+mnt="$1"; shift
+rootFS='root.x86_64' chRoot='chroot.sh' packages=("$@")
+tarBall='archlinux-bootstrap-x86_64.tar.gz' tarSig="$tarBall.sig"
+officialURL='https://archlinux.org' globalMirror='https://geo.mirror.pkgbuild.com'
+
+[[ -d "$mnt/$rootFS" ]]&&{
+  read -rp "$rootFS exist. Do you want to overwrite? [y/N]: "
+  case ${REPLY,,} in
+    y|yes) umount "$mnt/$rootFS"; rm -r "${mnt:?}/$rootFS";;
+    *) printf 'archstrap [\e[1;31m❌\e[m]: Script aborted\n'; exit;;
+  esac
+}
+
+printf 'archstrap [\e[1;33m❗\e[m]: Downloading bootstrap signature & tarball..\n'
+curl "$officialURL/iso/latest/$tarSig" -o "$mnt/$tarSig"
+curl "$globalMirror/iso/latest/$tarBall" -o "$mnt/$tarBall"
+
+printf 'archstrap [\e[1;33m❗\e[m]: Verifying tarball GPG signature..\n'
+if gpg --verify "$mnt/$tarSig" "$mnt/$tarBall"; then
+  printf 'archstrap [\e[1;32m🗸\e[m]: Signature verified!\n'
+else
+  printf 'archstrap [\e[1;31m❌\e[m]: Bad signature. Keys may need to be manually recieved\n'; exit 1
+fi
+
+tar xzf "$mnt/$tarBall" -C "$mnt" --numeric-owner 2>/dev/null; rm -fr "${mnt:?}/$tarBall" "${mnt:?}/$tarSig"
+
+printf 'Server = %s/$repo/os/$arch\n' "$globalMirror" >> "$mnt/$rootFS"/etc/pacman.d/mirrorlist
+
+mkdir "$mnt/$rootFS"/run/shm; cp "$chRoot" "$mnt/$rootFS/$chRoot"
+mount --bind "$mnt/$rootFS" "$mnt/$rootFS"
+"$mnt/$rootFS"/bin/arch-chroot "$mnt/$rootFS" ./"$chRoot" "$mnt" "${packages[@]}"
