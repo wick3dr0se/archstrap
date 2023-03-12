@@ -1,12 +1,14 @@
 #!/bin/bash
 
+mnt="$1"; shift
+
+. helpers.sh
+
 systemd-machine-id-setup
 
-pacman-key --init
-pacman-key --populate
+pacman-key --init; pacman-key --populate
 
-pacman -Syyu&& printf 'archstrap [\e[32m🗸\e[m]: Refreshed package list & updated all packages\n'
-mnt="$1"; shift
-(( $# ))&& pacman -S "$@"&& printf 'archstrap [\e[32m🗸\e[m]: Installed specified packages to new root\n'
+pacman -Syyu&& _msg 'Refreshed package list & updated all packages'
+(( $# ))&& pacman -S "$@"&& _msg 'Installed specified packages to new root'
 
-printf 'archstrap [\e[32m🗸\e[m]: Mounted on %s\n' "$mnt"
+_msg "Done. Mounted on $mnt"

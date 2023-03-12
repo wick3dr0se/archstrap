@@ -1,11 +1,12 @@
 #!/bin/bash
 # shellcheck disable=SC2016
 # SC2816: Expressions don't expand in single quotes, use double quotes for that | It's intentional
-# archstrap must be executed as root user
 
 set -eEuo pipefail
+. helpers.sh
 
-(( $# ))||{ printf 'archstrap [\e[1;31m❌\e[m]: A path must be specified to bootstrap Arch Linux (btw)\n'; exit 1; }
+(( EUID == 0 ))|| _err 'Must be executed as superuser'
+(( $# ))|| _err 'A mount point must be specified to bootstrap Arch Linux'
 
 mnt="$1"; shift
 rootFS='root.x86_64' chRoot='chroot.sh' packages=("$@")
@@ -15,26 +16,22 @@ officialURL='https://archlinux.org' globalMirror='https://geo.mirror.pkgbuild.co
 [[ -d "$mnt/$rootFS" ]]&&{
   read -rp "$rootFS exist. Do you want to overwrite? [y/N]: "
   case ${REPLY,,} in
-    y|yes) umount "$mnt/$rootFS"; rm -r "${mnt:?}/$rootFS";;
-    *) printf 'archstrap [\e[1;31m❌\e[m]: Script aborted\n'; exit;;
+    y|yes) _unmount "$mnt/$rootFS"; _rm "$mnt/$rootFS";;
+    *) _err 'Script aborted';;
   esac
 }
 
-printf 'archstrap [\e[1;33m❗\e[m]: Downloading bootstrap signature & tarball..\n'
-curl "$officialURL/iso/latest/$tarSig" -o "$mnt/$tarSig"
-curl "$globalMirror/iso/latest/$tarBall" -o "$mnt/$tarBall"
+_warn 'Downloading bootstrap signature & tarball..'
+_curl "$globalMirror/iso/latest/$tarBall" "$officialURL/iso/latest/$tarSig"
 
-printf 'archstrap [\e[1;33m❗\e[m]: Verifying tarball GPG signature..\n'
-if gpg --verify "$mnt/$tarSig" "$mnt/$tarBall"; then
-  printf 'archstrap [\e[1;32m🗸\e[m]: Signature verified!\n'
-else
-  printf 'archstrap [\e[1;31m❌\e[m]: Bad signature. Keys may need to be manually recieved\n'; exit 1
-fi
+_warn 'Verifying tarball GPG signature..'
+if gpg --verify "$mnt/$tarSig" "$mnt/$tarBall"; then _msg 'Signature Verified'
+else _err 'Bad signature. Keys may need to be manually recieved'; fi
 
-tar xzf "$mnt/$tarBall" -C "$mnt" --numeric-owner 2>/dev/null; rm -fr "${mnt:?}/$tarBall" "${mnt:?}/$tarSig"
+_untar "$mnt/$tarBall" "$mnt/$tarSig"
 
 printf 'Server = %s/$repo/os/$arch\n' "$globalMirror" >> "$mnt/$rootFS"/etc/pacman.d/mirrorlist
 
-mkdir "$mnt/$rootFS"/run/shm; cp "$chRoot" "$mnt/$rootFS/$chRoot"
+mkdir "$mnt/$rootFS"/run/shm; cp "$chRoot" 'helpers.sh' "$mnt/$rootFS/"
 mount --bind "$mnt/$rootFS" "$mnt/$rootFS"
 "$mnt/$rootFS"/bin/arch-chroot "$mnt/$rootFS" ./"$chRoot" "$mnt" "${packages[@]}"
