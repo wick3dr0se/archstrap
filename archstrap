@@ -5,8 +5,9 @@
 set -eEuo pipefail
 . helpers.sh
 
-(( EUID == 0 ))|| _err 'Must be executed as superuser'
+(( ${EUID-} ))&&_err 'Must be executed as superuser'
 (( $# ))|| _err 'A mount point must be specified to bootstrap Arch Linux'
+[[ -d "$1" ]]|| _err 'Mount point does not exist'
 
 mnt="$1"; shift
 rootFS='root.x86_64' chRoot='chroot.sh' packages=("$@")
@@ -16,8 +17,7 @@ officialURL='https://archlinux.org' globalMirror='https://geo.mirror.pkgbuild.co
 [[ -d "$mnt/$rootFS" ]]&&{
   read -rp "$rootFS exist. Do you want to overwrite? [y/N]: "
   case ${REPLY,,} in
-    y|yes) _unmount "$mnt/$rootFS"; _rm "$mnt/$rootFS";;
-    *) _err 'Script aborted';;
+    y|yes) _unmount "$mnt/$rootFS"; _rm "$mnt/$rootFS";; *) _err 'Script aborted';;
   esac
 }
 
@@ -27,7 +27,6 @@ _curl "$globalMirror/iso/latest/$tarBall" "$officialURL/iso/latest/$tarSig"
 _warn 'Verifying tarball GPG signature..'
 if gpg --verify "$mnt/$tarSig" "$mnt/$tarBall"; then _msg 'Signature Verified'
 else _err 'Bad signature. Keys may need to be manually recieved'; fi
-
 _untar "$mnt/$tarBall" "$mnt/$tarSig"
 
 printf 'Server = %s/$repo/os/$arch\n' "$globalMirror" >> "$mnt/$rootFS"/etc/pacman.d/mirrorlist
