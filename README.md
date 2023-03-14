@@ -19,13 +19,18 @@ Legend
 ```
 <>  ...  required argument
 []  ...  optional option
+# comment
 ```
 
 ```bash
 bash archstrap <mountpoint> [packages]
+# or
+./archstrap <mountpoint> [packages]
 ```
+
+*archstrap must be executed with superuser permissions*
 
 Example
 ```bash
-bash archstrap /mnt
+sudo bash archstrap /mnt
 ```
