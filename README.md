@@ -1,6 +1,6 @@
 <div align="center">
 <h1>archstrap</h1>
-<p>A stupid simple script to bootstrap an Arch Linux installer environment useable from other Linux distributions. Written in BASH v4.2+</p>
+<p>A stupid simple script to bootstrap an Arch Linux installer environment from other Linux distributions. Written in BASH v4.2+</p>
 <img src="https://shields.io/badge/made-with%20%20bash-green?style=flat-square&color=d5c4a1&labelColor=1d2021&logo=gnu-bash">
 <img src=https://img.shields.io/badge/Maintained%3F-yes-green.svg></img>
 <br>
@@ -28,9 +28,9 @@ bash archstrap <mountpoint> [packages]
 ./archstrap <mountpoint> [packages]
 ```
 
-*archstrap must be executed with superuser permissions*
+
 
 Example
 ```bash
-sudo bash archstrap /mnt
+bash archstrap /mnt
 ```
