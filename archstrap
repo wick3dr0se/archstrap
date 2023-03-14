@@ -17,20 +17,19 @@ officialURL='https://archlinux.org' globalMirror='https://geo.mirror.pkgbuild.co
 [[ -d "$mnt/$rootFS" ]]&&{
   read -rp "$rootFS exist. Do you want to overwrite? [y/N]: "
   case ${REPLY,,} in
-    y|yes) _unmount "$mnt/$rootFS"; _rm "$mnt/$rootFS";; *) _err 'Script aborted';;
+    y|yes) _unmount "$mnt/$rootFS"; _rm "$mnt/$rootFS"; _div;; *) _err 'Script aborted';;
   esac
 }
 
 _warn 'Downloading bootstrap signature & tarball..'
 _curl "$globalMirror/iso/latest/$tarBall" "$officialURL/iso/latest/$tarSig"
-
 _warn 'Verifying tarball GPG signature..'
 if gpg --verify "$mnt/$tarSig" "$mnt/$tarBall"; then _msg 'Signature Verified'
 else _err 'Bad signature. Keys may need to be manually recieved'; fi
 _untar "$mnt/$tarBall" "$mnt/$tarSig"
 
 printf 'Server = %s/$repo/os/$arch\n' "$globalMirror" >> "$mnt/$rootFS"/etc/pacman.d/mirrorlist
-
-mkdir "$mnt/$rootFS"/run/shm; cp "$chRoot" 'helpers.sh' "$mnt/$rootFS/"
+mkdir "$mnt/$rootFS"/run/shm
+cp "$chRoot" 'helpers.sh' "$mnt/$rootFS/"; cp bash.bashrc "$mnt/$rootFS/etc/"
 mount --bind "$mnt/$rootFS" "$mnt/$rootFS"
-"$mnt/$rootFS"/bin/arch-chroot "$mnt/$rootFS" ./"$chRoot" "$mnt" "${packages[@]}"
+"$mnt/$rootFS"/bin/arch-chroot "$mnt/$rootFS" bash "$chRoot" "$mnt" "${packages[@]}"
