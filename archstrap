@@ -6,7 +6,7 @@ set -eEuo pipefail
 . helpers.sh
 
 (( ${EUID-} ))&&_err 'Must be executed as superuser'
-(( $# ))|| _err 'A mount point must be specified to bootstrap Arch Linux'
+(( $# ))|| _err 'A mount point must be specified to bootstrap Arch Linux (e.g. /tmp)'
 [[ -d "$1" ]]|| _err 'Mount point does not exist'
 
 mnt="$1"; shift
@@ -23,13 +23,22 @@ officialURL='https://archlinux.org' globalMirror='https://geo.mirror.pkgbuild.co
 
 _warn 'Downloading bootstrap signature & tarball..'
 _curl "$globalMirror/iso/latest/$tarBall" "$officialURL/iso/latest/$tarSig"
+
 _warn 'Verifying tarball GPG signature..'
 if gpg --verify "$mnt/$tarSig" "$mnt/$tarBall"; then _msg 'Signature Verified'
 else _err 'Bad signature. Keys may need to be manually recieved'; fi
+
 _untar "$mnt/$tarBall" "$mnt/$tarSig"
 
-printf 'Server = %s/$repo/os/$arch\n' "$globalMirror" >> "$mnt/$rootFS"/etc/pacman.d/mirrorlist
+printf 'Server = %s/$repo/os/$arch\n' "$globalMirror" >>"$mnt/$rootFS"/etc/pacman.d/mirrorlist
+
 mkdir "$mnt/$rootFS"/run/shm
-cp "$chRoot" 'helpers.sh' "$mnt/$rootFS/"; cp bash.bashrc "$mnt/$rootFS/etc/"
+[[ -d /usr/share/terminfo ]]&& cp -r /usr/share/terminfo "$mnt/$rootFS/usr/share/"
+
+cp "$chRoot" 'helpers.sh' "$mnt/$rootFS/"
+cp bash.bashrc "$mnt/$rootFS/etc/"
+
+_msg 'Created necessary chroot system files'
+
 mount --bind "$mnt/$rootFS" "$mnt/$rootFS"
 "$mnt/$rootFS"/bin/arch-chroot "$mnt/$rootFS" bash "$chRoot" "$mnt" "${packages[@]}"

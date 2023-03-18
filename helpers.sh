@@ -1,6 +1,7 @@
 #!/bin/bash
 
-shopt -s checkwinsize; (:;:)
+term_size(){ shopt -s checkwinsize; (:;:); }; term_size
+trap term_size 28
 
 _div(){ printf '%*s' "$COLUMNS"| tr ' ' "-"; }
 
