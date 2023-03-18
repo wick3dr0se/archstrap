@@ -32,5 +32,5 @@ bash archstrap <mountpoint> [packages]
 
 Example
 ```bash
-bash archstrap /mnt
+bash archstrap /tmp
 ```
