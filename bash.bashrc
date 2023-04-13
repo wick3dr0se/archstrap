@@ -72,8 +72,8 @@ prompt_command() {
 PROMPT_COMMAND=prompt_command
 timeEnd=$(date +%s)
 
-PS1="\$([[ \$? -eq 0 ]] && printf '\[\e[32m\]%s\[\e[m\] ' "\$symbol" || \
-  printf '\[\e[31m\]%s\[\e[0m\] ' "\$symbol")"
+PS1="\$([[ \$? -eq 0 ]] && printf 'archstrap \[\e[32m\]%s\[\e[m\] ' "\$symbol" || \
+  printf 'archstrap \[\e[31m\]%s\[\e[0m\] ' "\$symbol")"
 
 PS4='-[\e[33m${BASH_SOURCE/.sh}\e[0m: \e[32m${LINENO}\e[0m] '
 PS4+='${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
