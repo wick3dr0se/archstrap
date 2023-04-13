@@ -4,6 +4,7 @@
 
 mnt="$1"; shift
 basePackages=(
+  'dosfstools'
   'ntfs-3g'
   'parted'
   'gdisk'
