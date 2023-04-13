@@ -1,6 +1,7 @@
 #!/bin/bash
-# shellcheck disable=SC2016
-# SC2816: Expressions don't expand in single quotes, use double quotes for that | It's intentional
+# shellcheck disable=SC2015,SC2016
+# SC2015: Note that A && B || C is not if-then-else |#| however and/or statement works as expected
+# SC2816: Expressions don't expand in single quotes, use double quotes for that | mirrors accept vars
 
 set -eEuo pipefail
 . helpers.sh
@@ -16,12 +17,13 @@ officialURL='https://archlinux.org' globalMirror='https://geo.mirror.pkgbuild.co
 
 [[ -d "$mnt/$rootFS" ]]&&{ "$mnt/$rootFS"/bin/arch-chroot "$mnt/$rootFS"; exit; }
 
-_warn 'Downloading bootstrap signature & tarball..'
+_warn 'Downloading bootstrap tarball & signature..'
 _curl "$globalMirror/iso/latest/$tarBall" "$officialURL/iso/latest/$tarSig"
+_msg 'Downloaded bootstrap tarball & signature'
 
 _warn 'Verifying tarball GPG signature..'
-if gpg --verify "$mnt/$tarSig" "$mnt/$tarBall"; then _msg 'Signature Verified'
-else _err 'Bad signature. Keys may need to be manually recieved'; fi
+gpg --verify "$mnt/$tarSig" "$mnt/$tarBall"&& _msg 'Signature Verified'||
+  _err 'Bad signature. Keys may need to be manually recieved'
 
 _untar "$mnt/$tarBall" "$mnt/$tarSig"
 
