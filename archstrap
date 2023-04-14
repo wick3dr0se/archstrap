@@ -1,7 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2016
-# SC2816: Expressions don't expand in single quotes, use double quotes for that | mirrors accept vars
-
+# shellcheck disable=SC2016 Expressions don't expand in single quotes, use double quotes for that | mirrors accept vars
 set -eEuo pipefail
 
 mnt="$1" rootFS="$1/root.x86_64"; shift
