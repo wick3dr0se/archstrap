@@ -10,13 +10,14 @@ set -eEuo pipefail
 (( $# ))|| _err 'A mount point must be specified to bootstrap Arch Linux (e.g. /tmp)'
 [[ -d "$1" ]]|| _err 'Mount point does not exist'
 
-mnt="$1"; shift; packages=("$@")
-rootFS='root.x86_64' chRoot='chroot.sh'
+
+mnt="$1" rootFS="$1/root.x86_64"; shift
+chRoot='chroot.sh' packages=("$@")
 tarBall='archlinux-bootstrap-x86_64.tar.gz' tarSig="$tarBall.sig"
 officialURL='https://archlinux.org'
 globalMirror='https://geo.mirror.pkgbuild.com'
 
-[[ -d "$mnt/$rootFS" ]]&&{ "$mnt/$rootFS"/bin/arch-chroot "$mnt/$rootFS"; exit; }
+[[ -d "$rootFS" ]]&&{ "$rootFS"/bin/arch-chroot "$rootFS"; exit; }
 
 get_bootstrap(){ for _; do curl "$_" >"$mnt"/"${_##*/}"; done; }
 
@@ -28,12 +29,12 @@ gpg --verify "$mnt/$tarSig" "$mnt/$tarBall"&& _msg 'Signature Verified'||
   _err 'Bad signature. Keys may need to be manually recieved'
 
 tar -xzf "$mnt/$tarBall" -C "$mnt" --numeric-owner; _rm "$mnt/$tarball" "$mnt/$tarSig"
-_msg "Bootstrap tarball unpacked to $mnt/$rootFS"
+_msg "Bootstrap tarball unpacked to $rootFS"
 
-mkdir "$mnt/$rootFS"/run/shm
-[[ -d /usr/share/terminfo ]]&& cp -r /usr/share/terminfo "$mnt/$rootFS"/usr/share/
-cp "$chRoot" 'helpers.sh' "$mnt/$rootFS"/; cp bash.bashrc "$mnt/$rootFS"/etc/
-printf 'Server = %s/$repo/os/$arch\n' "$globalMirror" >>"$mnt/$rootFS"/etc/pacman.d/mirrorlist
+mkdir "$rootFS"/run/shm
+[[ -d /usr/share/terminfo ]]&& cp -r /usr/share/terminfo "$rootFS"/usr/share/
+cp "$chRoot" 'helpers.sh' "$rootFS"/; cp bash.bashrc "$rootFS"/etc/
+printf 'Server = %s/$repo/os/$arch\n' "$globalMirror" >>"$rootFS"/etc/pacman.d/mirrorlist
 _msg 'Created necessary chroot system files'
 
-"$mnt/$rootFS"/bin/arch-chroot "$mnt/$rootFS" bash "$chRoot" "$mnt" "${packages[@]}"
+"$rootFS"/bin/arch-chroot "$rootFS" bash "$chRoot" "$mnt" "${packages[@]}"
