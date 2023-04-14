@@ -10,7 +10,6 @@ set -eEuo pipefail
 (( $# ))|| _err 'A mount point must be specified to bootstrap Arch Linux (e.g. /tmp)'
 [[ -d "$1" ]]|| _err 'Mount point does not exist'
 
-
 mnt="$1" rootFS="$1/root.x86_64"; shift
 tarBall='archlinux-bootstrap-x86_64.tar.gz' tarSig="$tarBall.sig"
 officialURL='https://archlinux.org'
@@ -21,18 +20,17 @@ globalMirror='https://geo.mirror.pkgbuild.com'
 get_tarball(){ for _; do curl "$_" >"$mnt"/"${_##*/}"; done; }
 verify_unpack(){
   gpg --verify "$1" "$2"&& _msg 'Signature Verified'|| _err 'Bad signature. GPG key must be received'
-  tar -xzf "$1" -C "${1%%/*}" --numeric-owner; _rm "$1" "$2"
+  tar -xzf "$1" -C "${1%%/*}" --numeric-owner; rm "${1:?}" "${2:?}"
 }
 
 _warn 'Downloading bootstrap tarball & signature..'
 get_tarball "$globalMirror/iso/latest/$tarBall" "$officialURL/iso/latest/$tarSig"
-
 _warn 'Target downloaded. Verifying tarball GPG signature..'
 verify_unpack "$mnt/$tarBall" "$mnt/$tarSig"
 _msg "Bootstrap tarball unpacked to $rootFS"
 
 [[ -d /usr/share/terminfo ]]&& cp -r /usr/share/terminfo "$rootFS"/usr/share/
-cp "$chRoot" 'helpers.sh' "$rootFS"/; cp bash.bashrc "$rootFS"/etc/
+cp {chroot,helpers}.sh "$rootFS"/; cp bash.bashrc "$rootFS"/etc/
 printf 'Server = %s/$repo/os/$arch\n' "$globalMirror" >>"$rootFS"/etc/pacman.d/mirrorlist
 _msg 'Created necessary chroot system files'
 
