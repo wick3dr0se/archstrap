@@ -35,5 +35,4 @@ cp "$chRoot" 'helpers.sh' "$mnt/$rootFS"/; cp bash.bashrc "$mnt/$rootFS"/etc/
 printf 'Server = %s/$repo/os/$arch\n' "$globalMirror" >>"$mnt/$rootFS"/etc/pacman.d/mirrorlist
 _msg 'Created necessary chroot system files'
 
-mount --bind "$mnt/$rootFS" "$mnt/$rootFS"
 "$mnt/$rootFS"/bin/arch-chroot "$mnt/$rootFS" bash "$chRoot" "$mnt" "${packages[@]}"
