@@ -27,7 +27,7 @@ _warn 'Target downloaded. Verifying tarball GPG signature..'
 gpg --verify "$mnt/$tarSig" "$mnt/$tarBall"&& _msg 'Signature Verified'||
   _err 'Bad signature. Keys may need to be manually recieved'
 
-_untar "$mnt/$tarBall" "$mnt/$tarSig"
+tar -xzf "$mnt/$tarBall" -C "$mnt" --numeric-owner; rm "$mnt/$tarball" "$mnt/$tarSig"
 _msg "Bootstrap tarball unpacked to $mnt/$rootFS"
 
 mkdir "$mnt/$rootFS"/run/shm
