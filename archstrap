@@ -2,14 +2,15 @@
 # shellcheck disable=SC2016 Expressions don't expand in single quotes, use double quotes for that | mirrors accept vars
 set -eEuo pipefail
 
+(( $# ))||{ printf '\e[31mx\e[m: %s\n' 'A mountpoint must be specified to bootstrap Arch Linux (e.g. /tmp)'; exit 1; }
+[[ -d "$1" ]]||{ printf '\e[31mx\e[m: %s\n' "Mountpoint $1 does not exist"; exit 1; }
+(( ${EUID-} ))&&{ printf '\e[31mx\e[m: %s\n' 'Must be executed as superuser'; exit 1; }
+
 mnt="$1" rootFS="$1/root.x86_64"; shift
 tarBall='archlinux-bootstrap-x86_64.tar.gz' tarSig="$tarBall.sig"
 officialURL='https://archlinux.org'
 globalMirror='https://geo.mirror.pkgbuild.com'
 
-(( ${EUID-} ))&&{ printf '\e[31mx\e[m: %s\n' 'Must be executed as superuser'; exit 1; }
-(( $# ))||{ printf '\e[31mx\e[m: %s\n' 'A mountpoint must be specified to bootstrap Arch Linux (e.g. /tmp)'; exit 1; }
-[[ -d "$1" ]]||{ printf '\e[31mx\e[m: %s\n' 'Mount point does not exist'; exit 1; }
 [[ -d "$rootFS" ]]&&{ "$rootFS"/bin/arch-chroot "$rootFS"; exit; }
 
 get_tarball(){ for _; do curl "$_" >"$mnt"/"${_##*/}"; done; }
