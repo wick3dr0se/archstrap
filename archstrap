@@ -19,10 +19,11 @@ globalMirror='https://geo.mirror.pkgbuild.com'
 [[ -d "$mnt/$rootFS" ]]&&{ "$mnt/$rootFS"/bin/arch-chroot "$mnt/$rootFS"; exit; }
 
 _warn 'Downloading bootstrap tarball & signature..'
-_curl "$globalMirror/iso/latest/$tarBall" "$officialURL/iso/latest/$tarSig"
-_msg 'Downloaded bootstrap tarball & signature'
+for _ in "$globalMirror/iso/latest/$tarBall" "$officialURL/iso/latest/$tarSig"; do
+  curl "$_" > "$mnt/${_##*/}"
+done
 
-_warn 'Verifying tarball GPG signature..'
+_warn 'Target downloaded. Verifying tarball GPG signature..'
 gpg --verify "$mnt/$tarSig" "$mnt/$tarBall"&& _msg 'Signature Verified'||
   _err 'Bad signature. Keys may need to be manually recieved'
 
