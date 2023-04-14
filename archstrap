@@ -18,16 +18,17 @@ globalMirror='https://geo.mirror.pkgbuild.com'
 
 [[ -d "$rootFS" ]]&&{ "$rootFS"/bin/arch-chroot "$rootFS"; exit; }
 
-get_bootstrap(){ for _; do curl "$_" >"$mnt"/"${_##*/}"; done; }
+get_tarball(){ for _; do curl "$_" >"$mnt"/"${_##*/}"; done; }
+verify_unpack(){
+  gpg --verify "$1" "$2"&& _msg 'Signature Verified'|| _err 'Bad signature. GPG key must be received'
+  tar -xzf "$1" -C "${1%%/*}" --numeric-owner; _rm "$1" "$2"
+}
 
 _warn 'Downloading bootstrap tarball & signature..'
-get_bootstrap "$globalMirror/iso/latest/$tarBall" "$officialURL/iso/latest/$tarSig"
+get_tarball "$globalMirror/iso/latest/$tarBall" "$officialURL/iso/latest/$tarSig"
 
 _warn 'Target downloaded. Verifying tarball GPG signature..'
-gpg --verify "$mnt/$tarSig" "$mnt/$tarBall"&& _msg 'Signature Verified'||
-  _err 'Bad signature. Keys may need to be manually recieved'
-
-tar -xzf "$mnt/$tarBall" -C "$mnt" --numeric-owner; _rm "$mnt/$tarball" "$mnt/$tarSig"
+verify_unpack "$mnt/$tarBall" "$mnt/$tarSig"
 _msg "Bootstrap tarball unpacked to $rootFS"
 
 [[ -d /usr/share/terminfo ]]&& cp -r /usr/share/terminfo "$rootFS"/usr/share/
