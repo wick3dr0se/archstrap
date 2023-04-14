@@ -15,7 +15,7 @@ globalMirror='https://geo.mirror.pkgbuild.com'
 
 get_tarball(){ for _; do curl "$_" >"$mnt"/"${_##*/}"; done; }
 verify_unpack(){
-  if gpg --verify "$1" "$2"; then printf '\e[32m>\e[m: %s\n' 'Signature verified'
+  if gpg --verify "$2" "$1"; then printf '\e[32m>\e[m: %s\n' 'Signature verified'
   else printf '\e[31mx\e[m: %s\n' 'Bad signature. GPG key must be received'; fi
   tar -xzf "$1" -C "${1%%/*}" --numeric-owner; rm "${1:?}" "${2:?}"
 }
