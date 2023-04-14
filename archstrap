@@ -12,7 +12,6 @@ set -eEuo pipefail
 
 
 mnt="$1" rootFS="$1/root.x86_64"; shift
-packages=("$@")
 tarBall='archlinux-bootstrap-x86_64.tar.gz' tarSig="$tarBall.sig"
 officialURL='https://archlinux.org'
 globalMirror='https://geo.mirror.pkgbuild.com'
@@ -37,4 +36,4 @@ cp "$chRoot" 'helpers.sh' "$rootFS"/; cp bash.bashrc "$rootFS"/etc/
 printf 'Server = %s/$repo/os/$arch\n' "$globalMirror" >>"$rootFS"/etc/pacman.d/mirrorlist
 _msg 'Created necessary chroot system files'
 
-"$rootFS"/bin/arch-chroot "$rootFS" ./chroot.sh "$mnt" "${packages[@]}"
+"$rootFS"/bin/arch-chroot "$rootFS" ./chroot.sh "$mnt" "$@"
