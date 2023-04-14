@@ -30,7 +30,6 @@ gpg --verify "$mnt/$tarSig" "$mnt/$tarBall"&& _msg 'Signature Verified'||
 tar -xzf "$mnt/$tarBall" -C "$mnt" --numeric-owner; _rm "$mnt/$tarball" "$mnt/$tarSig"
 _msg "Bootstrap tarball unpacked to $rootFS"
 
-mkdir "$rootFS"/run/shm
 [[ -d /usr/share/terminfo ]]&& cp -r /usr/share/terminfo "$rootFS"/usr/share/
 cp "$chRoot" 'helpers.sh' "$rootFS"/; cp bash.bashrc "$rootFS"/etc/
 printf 'Server = %s/$repo/os/$arch\n' "$globalMirror" >>"$rootFS"/etc/pacman.d/mirrorlist
