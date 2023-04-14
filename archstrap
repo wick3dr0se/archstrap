@@ -18,16 +18,16 @@ globalMirror='https://geo.mirror.pkgbuild.com'
 
 [[ -d "$mnt/$rootFS" ]]&&{ "$mnt/$rootFS"/bin/arch-chroot "$mnt/$rootFS"; exit; }
 
+get_bootstrap(){ for _; do curl "$_" >"$mnt"/"${_##*/}"; done; }
+
 _warn 'Downloading bootstrap tarball & signature..'
-for _ in "$globalMirror/iso/latest/$tarBall" "$officialURL/iso/latest/$tarSig"; do
-  curl "$_" > "$mnt/${_##*/}"
-done
+get_bootstrap "$globalMirror/iso/latest/$tarBall" "$officialURL/iso/latest/$tarSig"
 
 _warn 'Target downloaded. Verifying tarball GPG signature..'
 gpg --verify "$mnt/$tarSig" "$mnt/$tarBall"&& _msg 'Signature Verified'||
   _err 'Bad signature. Keys may need to be manually recieved'
 
-tar -xzf "$mnt/$tarBall" -C "$mnt" --numeric-owner; rm "$mnt/$tarball" "$mnt/$tarSig"
+tar -xzf "$mnt/$tarBall" -C "$mnt" --numeric-owner; _rm "$mnt/$tarball" "$mnt/$tarSig"
 _msg "Bootstrap tarball unpacked to $mnt/$rootFS"
 
 mkdir "$mnt/$rootFS"/run/shm
