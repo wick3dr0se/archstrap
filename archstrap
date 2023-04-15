@@ -30,4 +30,4 @@ cp chroot.sh "$rootFS/"; cp bash.bashrc "$rootFS/etc/"
 printf 'Server = %s/$repo/os/$arch\n' "$globalMirror" >>"$rootFS/etc/pacman.d/mirrorlist"
 printf '\e[32m>\e[m: %s\n' 'Created necessary chroot system files'
 
-"$rootFS/bin/arch-chroot" "$rootFS" ./chroot.sh "$mnt" "$@"
+"$rootFS/bin/arch-chroot" "$rootFS" /bin/bash chroot.sh "$mnt" "$@"
