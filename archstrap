@@ -7,6 +7,7 @@ set -eEuo pipefail
 (( ${EUID-} ))&&{ printf '\e[31mx\e[m: %s\n' 'Must be executed as superuser'; exit 1; }
 
 mnt="$1" rootFS="$1/root.x86_64"; shift
+packages=('dosfstools' 'ntfs-3g' 'parted' 'gdisk' "$@")
 tarBall='archlinux-bootstrap-x86_64.tar.gz' tarSig="$tarBall.sig"
 officialURL="https://archlinux.org" globalMirror="https://geo.mirror.pkgbuild.com"
 
@@ -31,4 +32,4 @@ cp chroot.sh "$rootFS/"; cp bash.bashrc "$rootFS/etc/"
 printf 'Server = %s/$repo/os/$arch\n' "$globalMirror" >>"$rootFS/etc/pacman.d/mirrorlist"
 printf '\e[32m>\e[m: %s\n' 'Created necessary chroot system files'
 
-arch_chroot /bin/bash chroot.sh "$mnt" "$@"
+arch_chroot /bin/bash chroot.sh "$mnt" "${packages[@]}"
