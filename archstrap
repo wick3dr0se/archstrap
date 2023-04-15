@@ -10,14 +10,15 @@ mnt="$1" rootFS="$1/root.x86_64"; shift
 tarBall='archlinux-bootstrap-x86_64.tar.gz' tarSig="$tarBall.sig"
 officialURL="https://archlinux.org" globalMirror="https://geo.mirror.pkgbuild.com"
 
-: "$rootFS"; [[ -d "$_" ]]&&{ "$_/bin/arch-chroot" "$_"; exit; }
-
+arch_chroot(){ : "$rootFS"; mount --bind "$_" "$_"; "$_/bin/arch-chroot" "$_" "$@"; }
 get_tarball(){ for _; do curl "$_" >"$mnt"/"${_##*/}"; done; }
 verify_unpack(){
   if gpg --verify "$2" "$1"; then printf '\e[32m>\e[m: %s\n' 'Signature verified'
   else printf '\e[31mx\e[m: %s\n' 'Bad signature. GPG key must be received'; fi
   tar -xzf "$1" -C "${1%/*}" --numeric-owner; rm "${1:?}" "${2}"
 }
+
+[[ -d $rootFS ]]&&{ arch_chroot; exit; }
 
 printf '\e[33m!\e[m: %s\n' 'Downloading bootstrap tarball & signature..'
 : 'iso/latest'; get_tarball "$globalMirror/$_/$tarBall" "$officialURL/$_/$tarSig"
@@ -30,4 +31,4 @@ cp chroot.sh "$rootFS/"; cp bash.bashrc "$rootFS/etc/"
 printf 'Server = %s/$repo/os/$arch\n' "$globalMirror" >>"$rootFS/etc/pacman.d/mirrorlist"
 printf '\e[32m>\e[m: %s\n' 'Created necessary chroot system files'
 
-"$rootFS/bin/arch-chroot" "$rootFS" /bin/bash chroot.sh "$mnt" "$@"
+arch_chroot /bin/bash chroot.sh "$mnt" "$@"
