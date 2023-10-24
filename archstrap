@@ -7,17 +7,19 @@ set -eEuo pipefail
 (( $# ))||{ printf '\e[31mx\e[m: %s\n' 'A mountpoint must be specified to bootstrap Arch Linux (e.g. /tmp)'; exit 1; }
 [[ -d $1 ]]||{ printf '\e[31mx\e[m: %s\n' "Mountpoint $1 does not exist"; exit 1; }
 
-mnt="${1%/}"; shift
+mnt="${1%/}"
 rootFS="$mnt/${2:-archrootfs}"
-packages=('dosfstools' 'ntfs-3g' 'parted' 'gdisk' "$@")
+packages=('dosfstools' 'ntfs-3g' 'parted' 'gdisk')
 tarBall='archlinux-bootstrap-x86_64.tar.gz' tarSig="$tarBall.sig"
 officialURL="https://archlinux.org"
 globalMirror="https://geo.mirror.pkgbuild.com"
 
 get_tarball(){
-  for _; do
-    curl "$_" >/tmp/"${_##*/}"
-  done
+  [[ -f /tmp/$tarSig ]]&& rm "/tmp/${tarSig:?}"
+  curl "$2" >"/tmp/${2##*/}"
+
+  [[ -f /tmp/$tarBall ]]&& return
+  curl "$1" >"/tmp/${1##*/}"
 }
 
 verify_unpack(){
@@ -34,7 +36,7 @@ verify_unpack(){
 
 arch_chroot(){
   : "$rootFS"
-  mountpoint "$_"|| mount --bind "$_" "$_"
+  mountpoint "$_" >/dev/null|| mount --bind "$_" "$_"
   "$_/bin/arch-chroot" "$_" "$@"
 }
 
@@ -47,6 +49,8 @@ get_tarball "$globalMirror/$_/$tarBall" "$officialURL/$_/$tarSig"
 printf '\e[33m!\e[m: %s\n' 'Target downloaded. Verifying tarball GPG signature..'
 verify_unpack "$tarBall"
 printf '\e[32m>\e[m: %s\n' "Bootstrapped tarball unpacked to $rootFS"
+
+[[ $@ =~ '--buildfs' ]]&& exit
 
 : '/usr/share/terminfo'; [[ -d $_ ]]&& cp -r "$_" "$rootFS/usr/share/"
 cp chroot.sh "$rootFS/"; cp bash.bashrc "$rootFS/etc/"
