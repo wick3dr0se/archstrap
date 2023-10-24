@@ -8,7 +8,7 @@ set -eEuo pipefail
 [[ -d $1 ]]||{ printf '\e[31mx\e[m: %s\n' "Mountpoint $1 does not exist"; exit 1; }
 
 mnt="${1%/}"; shift
-rootFS="$mnt/archrootfs"
+rootFS="$mnt/${2:-archrootfs}"
 packages=('dosfstools' 'ntfs-3g' 'parted' 'gdisk' "$@")
 tarBall='archlinux-bootstrap-x86_64.tar.gz' tarSig="$tarBall.sig"
 officialURL="https://archlinux.org"
