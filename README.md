@@ -17,7 +17,7 @@ git clone https://github.com/wick3dr0se/archstrap; cd "${_%/*}"
 
 ## Usage
 ```bash
-./archstrap <mountpoint> [packages]
+./archstrap <mountpoint> [output_name]
 ```
 
 Example
@@ -26,12 +26,14 @@ archstrap /tmp
 ```
 ---
 
+optionally supply `--buildfs` as the last paremeter to build just the rootfs, without mounting 
+
 ## Tips
 `archstrap` must be executed as superuser and a mountpoint must be specified to create the environment
 
 `archstrap` verifies the gpg signature of the global mirror it uses. keys may need to be manually received as *superuser*
 ```bash
-gpg --receive-key <KEY>
+sudo gpg --receive-key <KEY>
 ```
 ---
 
