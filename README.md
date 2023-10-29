@@ -11,7 +11,7 @@
 
 ## Download
 ```bash
-git clone https://github.com/wick3dr0se/archstrap; cd "${_%/*}"
+git clone https://github.com/wick3dr0se/archstrap; cd "${_##*/}"
 ```
 ---
 
