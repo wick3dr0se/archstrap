@@ -4,76 +4,58 @@
 [[ $- != *i* ]] && return
 
 archASCII='
-         \e[0;36m.
-        \e[0;36m/ \
-       \e[0;36m/   \    \e[1;37m         #     \e[1;36m| *
-      \e[0;36m/^.   \   \e[1;37m#%" a#"e 6##%  \e[1;36m| | |-^-. |   | \ /
-     \e[0;36m/  .-.  \  \e[1;37m#   #    #  #  \e[1;36m| | |   | |   |  X
-    \e[0;36m/  (   ) _\ \e[1;37m#   %#e" #  #  \e[1;36m| | |   | ^._.| / \
-   \e[1;36m/ _.~   ~._^\
-  \e[1;36m/.^         ^.\ \e[0;37mTM\e[m'
+         \e[0;34m.
+        \e[0;34m/ \
+       \e[0;34m/   \    \e[1;37m         #     \e[1;34m| *
+      \e[0;34m/^.   \   \e[1;37m#%" a#"e 6##%  \e[1;34m| | |-^-. |   | \ /
+     \e[0;34m/  .-.  \  \e[1;37m#   #    #  #  \e[1;34m| | |   | |   |  X
+    \e[0;34m/  (   ) _\ \e[1;37m#   %#e" #  #  \e[1;34m| | |   | ^._.| / \
+   \e[1;34m/ _.~   ~._^\
+  \e[1;34m/.^         ^.\ \e[0;37mTM\e[m'
 
 echo -e "$archASCII"
 
+shopt -s autocd cdspell dirspell cdable_vars
+
 alias b='bash'
-alias bs='. ~/.bashrc'
 alias v='vim'
-alias vrc='v ~/.vimrc'
-alias brc='v ~/.bashrc'
-alias rm='rm -fr'
 
 alias ls='ls --file-type --color=auto'
 alias la='ls -A'
 alias ll='ls -l'
 
-gitc(){ # git clone
-  if [[ ! $1 ]]; then
-    printf 'Must specifiy a repository\n'; return 1
-  elif [[ $2 ]]; then
-    user="$1" repo="$2"
-  elif [[ $1 =~ / ]]; then
-    user="${1%%/*}" repo="${1##*/}"
-  fi
-  
-  git clone https://github.com/"${user:-wick3dr0se}"/"${repo:=$1}"
-  cd "$repo"; printf '\e[2J\e[H'; ls
-}
+alias rm='rm -fr'
 
-# prompt
-shopt -s autocd cdspell dirspell cdable_vars
+alias pac='yay --color=auto'
 
-prompt_command() {
-  dir='~'
-  [[ $PWD == $HOME ]] || dir="${PWD/$HOME\/}"
-  branch=$(git branch 2>/dev/null)
-  tag=$(git tag 2>/dev/null)
+sucColor='\e[38;2;102;255;102m'
+errColor='\e[38;2;255;110;106m'
+if (( EUID )); then
+  userColor="$sucColor" userSymbol='$'
+else
+  userColor="$errColor" userSymbol='#'
+fi
 
-	[[ $EUID -eq 0 ]] && symbol='#' || symbol='$'
-  
-  timeStart=$(date +%s)
+prompt_command(){
+  unset branch tag
 
-	sec=$(((timeStart-timeEnd)%60))
-	min=$(((timeStart-timeEnd)%3600/60))
-	hr=$(((timeStart-timeEnd)/3600))
+  [[ $PWD =~ ^$HOME ]]&& { PWD="${PWD#$HOME}" PWD="~$PWD"; }
 
-	timer=
-  (( $hr > 0 )) && timer=$(printf '\e[31m%s\e[0mh, ' "$hr")
-  (( $min > 0 )) && timer+=$(printf '\e[33m%s\e[0mm, ' "$min")
-  (( $sec > 0 )) && timer+=$(printf '\e[32m%s\e[0ms ' "$sec")
-  
-  [[ $timer ]] && timer="in $timer"
+  local branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null)"
+  local tag="$(git describe --tags --abbrev=0 2>/dev/null)"
 
-  timeEnd=$timeStart
-
-  printf '%s \e[36m%s \e[0m%s %s\n' \
-    "$dir" "${branch#* }" "$tag" "$timer"
+  printf '\e[2;38;2;255;176;0m%s\e[m' "$PWD"
+  [[ $branch ]]&& printf ' \e[2m%s\e[m \e[38;2;243;79;41m\e[m \e[2m%s\e[m' \
+    "$branch" "$tag"
+  echo
 }
 
 PROMPT_COMMAND=prompt_command
-timeEnd=$(date +%s)
 
-PS1="\$([[ \$? -eq 0 ]] && printf 'archstrap \[\e[32m\]%s\[\e[m\] ' "\$symbol" || \
-  printf 'archstrap \[\e[31m\]%s\[\e[0m\] ' "\$symbol")"
+PS1="\[$userColor\]\$USER\[\e[m\]@\[\e[38;2;255;176;0m\]archstrap\[\e[m\] \
+\$((( \$? ))\
+  && printf '\[$errColor\]$userSymbol\[\e[m\]> '\
+  || printf '\[$sucColor\]$userSymbol\[\e[m\]> ')"
 
-PS4='-[\e[33m${BASH_SOURCE/.sh}\e[0m: \e[32m${LINENO}\e[0m] '
-PS4+='${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+PS4="-[\e[33m${BASH_SOURCE[0]%.sh}\e[m: \e[32m$LINENO\e[m]\
+  ${FUNCNAME:+${FUNCNAME[0]}(): }"
