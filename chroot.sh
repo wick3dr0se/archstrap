@@ -11,4 +11,7 @@ printf '\e[32m>\e[m: %s\n%s\n' "Done. Arch installer environment setup; Chaged r
   'You may now proceed to: https://wiki.archlinux.org/title/Installation_guide#Partition_the_disks and follow the rest of the installation guide'
 
 printf '%s\n' 'echo "Welcome to Arch Linux"' >>/etc/profile
+
+rm "$0"
+
 bash --login
