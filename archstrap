@@ -10,7 +10,7 @@ set -eEuo pipefail
 mnt="${1%/}"
 rootFS="$mnt/${2:-archrootfs}"
 packages=('dosfstools' 'ntfs-3g' 'parted' 'gdisk')
-tarBall='archlinux-bootstrap-x86_64.tar.gz' tarSig="$tarBall.sig"
+tarBall='archlinux-bootstrap-x86_64.tar.zst' tarSig="$tarBall.sig"
 officialURL="https://archlinux.org"
 globalMirror="https://geo.mirror.pkgbuild.com"
 
@@ -30,7 +30,7 @@ verify_unpack(){
     exit 1
   fi
 
-  tar -xzf "/tmp/$1" -C "$mnt" --numeric-owner
+  tar -xf "/tmp/$1" -C "$mnt" --numeric-owner
   mv "$mnt/root.x86_64" "$rootFS"
 }
 
