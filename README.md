@@ -11,36 +11,23 @@
 <img src="https://discordapp.com/api/guilds/913584348937207839/widget.png?style=shield"/></a>
 </div>
 
-## Download
+## Acquisition
 ```bash
 git clone https://github.com/wick3dr0se/archstrap; cd "${_##*/}"
 ```
 ---
 
-## Usage
+## Execution
 ```bash
-./archstrap <mountpoint> [output_name]
-```
-
-Example
-```bash
-archstrap /tmp
+./archstrap [mountpoint] [output_name] [packages]...
 ```
 ---
 
-optionally supply `--buildfs` as the last paremeter to build just the rootfs, without mounting 
-
 ## Tips
-`archstrap` must be executed as superuser and a mountpoint must be specified to create the environment
+`archstrap` must be executed as superuser
 
-`archstrap` verifies the gpg signature of the global mirror it uses. keys may need to be manually received as *superuser*
+`archstrap` verifies the gpg signature of the global mirror it uses. if it fails keys may need to be manually received as *superuser*
 ```bash
 sudo gpg --receive-key <KEY>
 ```
 ---
-
-### Legend
-```
-<>  ...  required argument
-[]  ...  optional option
-```

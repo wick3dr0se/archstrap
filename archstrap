@@ -1,61 +1,66 @@
 #!/bin/bash
-# shellcheck disable=SC2016 Expressions don't expand in single quotes, use double quotes for that | mirrors accept vars
+# shellcheck disable=SC2016
+# archstrap
+# A stupid simple script to bootstrap Arch Linux from other Linux distributions 
+# Depends:
+# curl
+# gpg
+# tar
+# zstd
+# mount
+# mountpoint
+# mv
+# cp
+# Reference:
+# https://wiki.archlinux.org/title/Install_Arch_Linux_from_existing_Linux_
 
-set -eEuo pipefail
+LC_ALL=C
+tmpDir="${TMPDIR:-${XDG_RUNTIME_DIR:-/tmp}}"
+: "${1%/}"; mountpoint="${_:-$tmpDir}"
+rootFs="$mountpoint/${2:-archrootfs}"
+mirror='https://geo.mirror.pkgbuild.com'
+tarBall='archlinux-bootstrap-x86_64.tar.zst'
 
-(( ${EUID-} ))&&{ printf '\e[31mx\e[m: %s\n' 'Must be executed as superuser'; exit 1; }
-(( $# ))||{ printf '\e[31mx\e[m: %s\n' 'A mountpoint must be specified to bootstrap Arch Linux (e.g. /tmp)'; exit 1; }
-[[ -d $1 ]]||{ printf '\e[31mx\e[m: %s\n' "Mountpoint $1 does not exist"; exit 1; }
-
-mnt="${1%/}"
-rootFS="$mnt/${2:-archrootfs}"
-packages=('dosfstools' 'ntfs-3g' 'parted' 'gdisk')
-tarBall='archlinux-bootstrap-x86_64.tar.zst' tarSig="$tarBall.sig"
-officialURL="https://archlinux.org"
-globalMirror="https://geo.mirror.pkgbuild.com"
-
-get_tarball(){
-  [[ -f /tmp/$tarSig ]]&& rm "/tmp/${tarSig:?}"
-  curl "$2" >"/tmp/${2##*/}"
-
-  [[ -f /tmp/$tarBall ]]&& return
-  curl "$1" >"/tmp/${1##*/}"
+cleanup() {
+    umount -R "$rootFs"
+    
+    exit "${1:-1}"
 }
 
-verify_unpack(){
-  if gpg --verify "/tmp/$1.sig" "/tmp/$1"; then
-    printf '\e[32m>\e[m: %s\n' 'Signature verified'
-  else
-    printf '\e[31mx\e[m: %s\n' 'Bad signature. GPG key must be received'
-    exit 1
-  fi
+arch_chroot() {
+    mount --bind "$1" "$1"
 
-  tar -xf "/tmp/$1" -C "$mnt" --numeric-owner
-  mv "$mnt/root.x86_64" "$rootFS"
+    "$1/bin/arch-chroot" "$@"
 }
 
-arch_chroot(){
-  : "$rootFS"
-  mountpoint "$_" >/dev/null|| mount --bind "$_" "$_"
-  "$_/bin/arch-chroot" "$_" "$@"
+newroot_setup() {
+    cp -a "chroot.sh" "$1/"
+    cp bash.bashrc "$1/etc"
+    : /usr/share; [[ -d "$_/terminfo" ]]&& cp -r "$_/terminfo" "$1$_/"
+
+    arch_chroot "$1"
 }
 
-[[ -d $rootFS ]]&&{ arch_chroot; exit; }
+bootstrap_ext() (
+    cd "$tmpDir"|| return
 
-printf '\e[33m!\e[m: %s\n' 'Downloading bootstrap tarball & signature..'
-: "iso/latest"
-get_tarball "$globalMirror/$_/$tarBall" "$officialURL/$_/$tarSig"
+    curl -O "$mirror/iso/latest/$1{,.sig}"
 
-printf '\e[33m!\e[m: %s\n' 'Target downloaded. Verifying tarball GPG signature..'
-verify_unpack "$tarBall"
-printf '\e[32m>\e[m: %s\n' "Bootstrapped tarball unpacked to $rootFS"
+    gpg --keyserver-options auto-key-retrieve --verify "$1.sig"
 
-[[ $@ =~ '--buildfs' ]]&& exit
+    tar -xf "$1" --numeric-owner
 
-: '/usr/share/terminfo'; [[ -d $_ ]]&& cp -r "$_" "$rootFS/usr/share/"
-cp chroot.sh "$rootFS/"; cp bash.bashrc "$rootFS/etc/"
+    [[ -d $rootFs ]]&& rm -r "$rootFs"
+    mv "$mountpoint/root.x86_64" "$rootFs"
+)
 
-printf 'Server = %s/$repo/os/$arch\n' "$globalMirror" >>"$rootFS/etc/pacman.d/mirrorlist"
-printf '\e[32m>\e[m: %s\n' 'Created necessary chroot system files'
+trap cleanup EXIT INT
 
-arch_chroot /bin/bash chroot.sh "$rootFS" "${packages[@]}"
+(( EUID ))&& { printf 'Must be executed as superuser\n'; exit 1; }
+[[ -d $mountpoint ]]|| { printf 'Mountpoint %s does not exist\n' "$mountpoint"; exit 1; }
+[[ -d $rootFs ]]&& { arch_chroot "$rootFs"; exit; }
+
+bootstrap_ext "$tarBall"
+
+shift 2
+newroot_setup "$rootFs" chroot.sh "$@"
