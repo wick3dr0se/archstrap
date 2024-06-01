@@ -16,13 +16,13 @@
 
 LC_ALL=C
 tmpDir="${TMPDIR:-${XDG_RUNTIME_DIR:-/tmp}}"
-: "${1%/}"; mountpoint="${_:-$tmpDir}"
+: "${1%/}"; mountpoint="${1:-$tmpDir}"
 rootFs="$mountpoint/${2:-archrootfs}"
 mirror='https://geo.mirror.pkgbuild.com'
 tarBall='archlinux-bootstrap-x86_64.tar.zst'
 
 cleanup() {
-    umount -R "$rootFs"
+    umount -R "$rootFs" 2>/dev/null
     
     exit "${1:-1}"
 }
@@ -34,11 +34,14 @@ arch_chroot() {
 }
 
 newroot_setup() {
-    cp -a "chroot.sh" "$1/"
+    cp -a "$2" "$1/"
     cp bash.bashrc "$1/etc"
+    
     : /usr/share; [[ -d "$_/terminfo" ]]&& cp -r "$_/terminfo" "$1$_/"
-
-    arch_chroot "$1"
+    
+    printf 'Server = %s/$repo/os/$arch\n' "$mirror" >>"$1/etc/pacman.d/mirrorlist"
+    
+    arch_chroot "$1" /bin/bash "$2"
 }
 
 bootstrap_ext() (
@@ -50,8 +53,8 @@ bootstrap_ext() (
 
     tar -xf "$1" --numeric-owner
 
-    [[ -d $rootFs ]]&& rm -r "$rootFs"
-    mv "$mountpoint/root.x86_64" "$rootFs"
+    [[ -d $2 ]]&& rm -r "$2"
+    mv "$mountpoint/root.x86_64" "$2"
 )
 
 trap cleanup EXIT INT
@@ -60,7 +63,6 @@ trap cleanup EXIT INT
 [[ -d $mountpoint ]]|| { printf 'Mountpoint %s does not exist\n' "$mountpoint"; exit 1; }
 [[ -d $rootFs ]]&& { arch_chroot "$rootFs"; exit; }
 
-bootstrap_ext "$tarBall"
+bootstrap_ext "$tarBall" "$rootFs"
 
-shift 2
-newroot_setup "$rootFs" chroot.sh "$@"
+newroot_setup "$rootFs" chroot.sh

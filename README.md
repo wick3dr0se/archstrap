@@ -19,7 +19,7 @@ git clone https://github.com/wick3dr0se/archstrap; cd "${_##*/}"
 
 ## Execution
 ```bash
-./archstrap [mountpoint] [output_name] [packages]...
+./archstrap [mountpoint] [output_name]
 ```
 ---
 

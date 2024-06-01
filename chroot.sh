@@ -9,8 +9,8 @@ systemd-machine-id-setup
 pacman-key --init
 pacman-key --populate
 
-pacman -Syu --needed --noconfirm "$@"&&
-    printf 'Updated & installed packages\n'
+pacman -Syu --needed --noconfirm&&
+    printf 'Updated & synced repositories\n'
 
 printf '%s\n' 'Arch installer environment setup' \
     "Proceed with: $installGuide#Partition_the_disks & beyond" \
