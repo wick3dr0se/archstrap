@@ -16,7 +16,7 @@
 
 LC_ALL=C
 tmpDir="${TMPDIR:-${XDG_RUNTIME_DIR:-/tmp}}"
-: "${1%/}"; mountpoint="${1:-$tmpDir}"
+: "${1%/}"; mountpoint="${_:-$tmpDir}"
 rootFs="$mountpoint/${2:-archrootfs}"
 mirror='https://geo.mirror.pkgbuild.com'
 tarBall='archlinux-bootstrap-x86_64.tar.zst'
@@ -33,17 +33,6 @@ arch_chroot() {
     "$1/bin/arch-chroot" "$@"
 }
 
-newroot_setup() {
-    cp -a "$2" "$1/"
-    cp bash.bashrc "$1/etc"
-    
-    : /usr/share; [[ -d "$_/terminfo" ]]&& cp -r "$_/terminfo" "$1$_/"
-    
-    printf 'Server = %s/$repo/os/$arch\n' "$mirror" >>"$1/etc/pacman.d/mirrorlist"
-    
-    arch_chroot "$1" /bin/bash "$2"
-}
-
 bootstrap_ext() (
     cd "$tmpDir"|| return
 
@@ -56,6 +45,17 @@ bootstrap_ext() (
     [[ -d $2 ]]&& rm -r "$2"
     mv "$mountpoint/root.x86_64" "$2"
 )
+
+newroot_setup() {
+    cp -a "$2" "$1/"
+    cp bash.bashrc "$1/etc/"
+    
+    : 'usr/share'; [[ -d "/$_/terminfo" ]]&& cp -r "/$_/terminfo" "$1/$_/"
+    
+    printf 'Server = %s/$repo/os/$arch\n' "$mirror" >>"$1/etc/pacman.d/mirrorlist"
+    
+    arch_chroot "$1" /bin/bash "$2"
+}
 
 trap cleanup EXIT INT
 
