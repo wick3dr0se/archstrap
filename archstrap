@@ -43,7 +43,7 @@ bootstrap_ext() (
     tar -xf "$1" --numeric-owner
 
     [[ -d $2 ]]&& rm -r "$2"
-    mv "$mountpoint/root.x86_64" "$2"
+    mv "$tmpDir/root.x86_64" "$2"
 )
 
 newroot_setup() {
