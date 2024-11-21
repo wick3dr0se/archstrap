@@ -23,9 +23,9 @@ git clone https://github.com/wick3dr0se/archstrap; cd "${_##*/}"
 ./archstrap [mountpoint] [rootfs_name]
 ```
 
-if mountpoint is not specified environment variables $TMPDIR and $XDG_RUNTIME_DIR are checked. If those envs are empty, it will try to fallback to /tmp
+If mountpoint is not specified environment variables `$TMPDIR` and `$XDG_RUNTIME_DIR` are checked. If those envs are empty, it will try to fallback to directory /tmp. on some systems they may be set to something undesirable, like seen in [issue #11](https://github.com/wick3dr0se/archstrap/issues/11); if this is the case, `export $TMPDIR` in your ~/.bash_profile, as discussed above
 
-if no name is given for the root filesystem (rootfs_name), the filesystem will be named archrootfs
+If no name is given for the root filesystem (rootfs_name), the filesystem will be named archrootfs
 
 ---
 
