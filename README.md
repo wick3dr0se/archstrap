@@ -1,6 +1,7 @@
 <div align="center">
 <h1>archstrap</h1>
-<p>A stupid simple BASH script to bootstrap a minimal Arch Linux installer environment from other Linux distributions. Essentially <code>archstrap</code> will create a base Arch Linux system with working <code>pacman</code>, <code>archstrap</code>, <code>genfstab</code>, etc, at specifed mountpoint. <code>archstrap</code> makes installing Arch Linux from any Linux distribution easy; After <code>archstrap</code> execution, simply follow the <a href='https://wiki.archlinux.org/title/Installation_guide#Partition_the_disks'>ArchWiki</a> installation guide starting at disk partitioning</p>
+<p>A stupid simple, yet powerful Bash script to bootstrap a minimal Arch Linux system environment from any existing Linux system. <code>archstrap</code> streamlines the Arch Linux installer process, while avoiding the typical complications of ISO configurations and other complex setups. <code>archstrap</code> sets up a tiny root filesystem with just the essential packages such as <code>pacman</code>, <code>pacstrap</code> and <code>genfstab</code></p>
+<p>After <code>archstrap</code> execution, simply follow the <a href='https://wiki.archlinux.org/title/Installation_guide#Partition_the_disks'>ArchWiki</a> installation guide starting at disk partitioning</p>
 <img src="https://raw.githubusercontent.com/wick3dr0se/archstrap/master/archstrap.webp"></img>
 <br>
 <img src="https://shields.io/badge/made-with%20%20bash-green?style=flat-square&color=d5c4a1&labelColor=1d2021&logo=gnu-bash">
@@ -19,15 +20,22 @@ git clone https://github.com/wick3dr0se/archstrap; cd "${_##*/}"
 
 ## Execution
 ```bash
-./archstrap [mountpoint] [output_name]
+./archstrap [mountpoint] [rootfs_name]
 ```
+
+if mountpoint is not specified environment variables $TMPDIR and $XDG_RUNTIME_DIR are checked. If those envs are empty, it will try to fallback to /tmp
+
+if no name is given for the root filesystem (rootfs_name), the filesystem will be named archrootfs
+
 ---
 
 ## Tips
 `archstrap` must be executed as superuser
 
 `archstrap` verifies the gpg signature of the global mirror it uses. if it fails keys may need to be manually received as *superuser*
+
 ```bash
 sudo gpg --receive-key <KEY>
 ```
+
 ---
