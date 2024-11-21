@@ -14,23 +14,10 @@
 # Reference:
 # https://wiki.archlinux.org/title/Install_Arch_Linux_from_existing_Linux_
 
-LC_ALL=C
-mirror='https://geo.mirror.pkgbuild.com'
-tarBall='archlinux-bootstrap-x86_64.tar.zst'
-
 cleanup() {
     umount -R "$rootFs" 2>/dev/null
     
-    exit "${1:-1}"
-}
-
-absolute_path() {
-    case $1 in
-	/*) absolute=$1;;
-	*) absolute=$PWD/$1;;
-    esac
-
-    echo $absolute
+    exit 1
 }
 
 arch_chroot() {
@@ -40,16 +27,15 @@ arch_chroot() {
 }
 
 bootstrap_ext() (
-    cd "$tmpDir"|| return
+    cd "$1"|| return
 
-    curl -O "$mirror/iso/latest/$1{,.sig}"
+    curl -O "$mirror/iso/latest/$2{,.sig}"
 
-    gpg --keyserver-options auto-key-retrieve --verify "$1.sig"
+    gpg --keyserver-options auto-key-retrieve --verify "$2.sig"
 
-    tar -xf "$1" --numeric-owner
+    tar -xf "$2" --numeric-owner
 
-    [[ -d $2 ]]&& rm -r "$2"
-    mv "$tmpDir/root.x86_64" "$2"
+    mv "$1/root.x86_64" "$3"
 )
 
 newroot_setup() {
@@ -63,9 +49,13 @@ newroot_setup() {
     arch_chroot "$1" /bin/bash "$2"
 }
 
+LC_ALL=C
 tmpDir="${TMPDIR:-${XDG_RUNTIME_DIR:-/tmp}}"
-: "${1%/}"; mountpoint=$(absolute_path "${_:-$tmpDir}")
+[[ $1 && $1 != /* ]]&& { : "${1#./}"; absolutePath="$PWD/${_%"$HOME"}"; }
+: "${absolutePath%/}"; mountpoint="${_:-$tmpDir}"
 rootFs="$mountpoint/${2:-archrootfs}"
+mirror='https://geo.mirror.pkgbuild.com'
+tarBall='archlinux-bootstrap-x86_64.tar.zst'
 
 trap cleanup EXIT INT
 
@@ -73,6 +63,5 @@ trap cleanup EXIT INT
 [[ -d $mountpoint ]]|| { printf 'Mountpoint %s does not exist\n' "$mountpoint"; exit 1; }
 [[ -d $rootFs ]]&& { arch_chroot "$rootFs"; exit; }
 
-bootstrap_ext "$tarBall" "$rootFs"
-
+bootstrap_ext "$mountpoint" "$tarBall" "$rootFs"
 newroot_setup "$rootFs" chroot.sh
