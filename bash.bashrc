@@ -13,7 +13,7 @@ archASCII='
    \e[1;34m/ _.~   ~._^\
   \e[1;34m/.^         ^.\ \e[0;37mTM\e[m'
 
-echo -e "$archASCII"
+printf '%b' "$archASCII"
 
 shopt -s autocd cdspell dirspell cdable_vars
 
@@ -37,17 +37,18 @@ else
 fi
 
 prompt_command(){
+  local branch tag
   unset branch tag
 
-  [[ $PWD =~ ^$HOME ]]&& { PWD="${PWD#$HOME}" PWD="~$PWD"; }
+  [[ $PWD =~ ^$HOME ]]&& { PWD="${PWD#"$HOME"}" PWD="~$PWD"; }
 
-  local branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null)"
-  local tag="$(git describe --tags --abbrev=0 2>/dev/null)"
+  branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null)"
+  tag="$(git describe --tags --abbrev=0 2>/dev/null)"
 
   printf '\e[2;38;2;255;176;0m%s\e[m' "$PWD"
   [[ $branch ]]&& printf ' \e[2m%s\e[m \e[38;2;243;79;41m\e[m \e[2m%s\e[m' \
     "$branch" "$tag"
-  echo
+  printf '\n'
 }
 
 PROMPT_COMMAND=prompt_command
