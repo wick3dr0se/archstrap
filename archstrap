@@ -14,6 +14,8 @@
 # Reference:
 # https://wiki.archlinux.org/title/Install_Arch_Linux_from_existing_Linux_
 
+set -eEo pipefail
+
 cleanup() {
     umount -R "$rootFs" 2>/dev/null
     
@@ -30,11 +32,9 @@ bootstrap_ext() (
     cd "$1"|| return
 
     curl -O "$mirror/iso/latest/$2{,.sig}"
-
     gpg --keyserver-options auto-key-retrieve --verify "$2.sig"
 
     tar -xf "$2" --numeric-owner
-
     mv "$1/root.x86_64" "$3"
 )
 
@@ -43,7 +43,6 @@ newroot_setup() {
     cp bash.bashrc "$1/etc/"
     
     : 'usr/share'; [[ -d "/$_/terminfo" ]]&& cp -r "/$_/terminfo" "$1/$_/"
-    
     printf 'Server = %s/$repo/os/$arch\n' "$mirror" >>"$1/etc/pacman.d/mirrorlist"
     
     arch_chroot "$1" /bin/bash "$2"
@@ -59,8 +58,6 @@ tarBall='archlinux-bootstrap-x86_64.tar.zst'
 
 trap cleanup EXIT INT
 
-(( EUID ))&& { printf 'Must be executed as superuser\n'; exit 1; }
-[[ -d $mountpoint ]]|| { printf 'Mountpoint %s does not exist\n' "$mountpoint"; exit 1; }
 [[ -d $rootFs ]]&& { arch_chroot "$rootFs"; exit; }
 
 bootstrap_ext "$mountpoint" "$tarBall" "$rootFs"
