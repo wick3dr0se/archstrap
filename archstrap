@@ -15,9 +15,6 @@
 # https://wiki.archlinux.org/title/Install_Arch_Linux_from_existing_Linux_
 
 LC_ALL=C
-tmpDir="${TMPDIR:-${XDG_RUNTIME_DIR:-/tmp}}"
-: "${1%/}"; mountpoint="${_:-$tmpDir}"
-rootFs="$mountpoint/${2:-archrootfs}"
 mirror='https://geo.mirror.pkgbuild.com'
 tarBall='archlinux-bootstrap-x86_64.tar.zst'
 
@@ -25,6 +22,15 @@ cleanup() {
     umount -R "$rootFs" 2>/dev/null
     
     exit "${1:-1}"
+}
+
+absolute_path() {
+    case $1 in
+	/*) absolute=$1;;
+	*) absolute=$PWD/$1;;
+    esac
+
+    echo $absolute
 }
 
 arch_chroot() {
@@ -56,6 +62,10 @@ newroot_setup() {
     
     arch_chroot "$1" /bin/bash "$2"
 }
+
+tmpDir="${TMPDIR:-${XDG_RUNTIME_DIR:-/tmp}}"
+: "${1%/}"; mountpoint=$(absolute_path "${_:-$tmpDir}")
+rootFs="$mountpoint/${2:-archrootfs}"
 
 trap cleanup EXIT INT
 
