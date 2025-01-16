@@ -50,8 +50,8 @@ newroot_setup() {
 
 LC_ALL=C
 tmpDir="${TMPDIR:-${XDG_RUNTIME_DIR:-/tmp}}"
-[[ $1 && $1 != /* ]]&& { : "${1#./}"; absolutePath="$PWD/${_%"$HOME"}"; }
-: "${absolutePath%/}"; mountpoint="${_:-$tmpDir}"
+mountpoint="${1:-$tmpDir}"
+[[ $mountpoint != /* ]]&& mountpoint="$PWD/$mountpoint"
 rootFs="$mountpoint/${2:-archrootfs}"
 mirror='https://geo.mirror.pkgbuild.com'
 tarBall='archlinux-bootstrap-x86_64.tar.zst'
