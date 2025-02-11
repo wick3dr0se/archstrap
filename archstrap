@@ -31,7 +31,8 @@ arch_chroot() {
 bootstrap_ext() (
     cd "$1"|| return
 
-    curl -O "$mirror/iso/latest/$2{,.sig}"
+    curl -O "$mirror/iso/latest/$2"
+    curl -O "https://archlinux.org/iso/latest/$2.sig"
     gpg --keyserver-options auto-key-retrieve --verify "$2.sig"
 
     tar -xf "$2" --numeric-owner
