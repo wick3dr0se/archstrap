@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 installGuide='https://wiki.archlinux.org/title/Installation_guide'
 

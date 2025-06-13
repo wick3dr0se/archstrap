@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # shellcheck disable=SC2016
 # archstrap
 # A stupid simple script to bootstrap Arch Linux from other Linux distributions 
